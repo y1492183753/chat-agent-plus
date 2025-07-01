@@ -1,0 +1,24 @@
+{
+  "name": "pixel-adventure",
+  "version": "1.0.0",
+  "description": "A pixel-style platform adventure game built with Electron",
+  "main": "src/main/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "YaoJiaHao",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^37.1.0"
+  },
+  "keywords": [
+    "electron",
+    "game",
+    "pixel",
+    "platform",
+    "adventure"
+  ]
+}

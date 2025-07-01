@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Pixel Adventure</title>
+    <link rel="stylesheet" href="../styles/main.css">
+    <link rel="stylesheet" href="../styles/game-ui.css">
+</head>
+<body>
+    <div id="gameTitle">🎮 Pixel Adventure</div>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <div id="gameControls">
+        <div class="control-hint">🎯 使用方向键 ↑↓←→ 或 WASD 移动</div>
+    </div>
+    
+    <!-- 按模块化顺序加载JavaScript文件 -->
+    <script src="../js/utils/MathUtils.js"></script>
+    <script src="../js/utils/CollisionUtils.js"></script>
+    <script src="../js/systems/InputSystem.js"></script>
+    <script src="../js/systems/PhysicsSystem.js"></script>
+    <script src="../js/systems/RenderSystem.js"></script>
+    <script src="../js/entities/Player.js"></script>
+    <script src="../js/entities/Collectible.js"></script>
+    <script src="../js/core/Game.js"></script>
+    <script src="../js/core/GameLoop.js"></script>
+</body>
+</html>
