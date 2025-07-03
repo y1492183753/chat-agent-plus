@@ -60,7 +60,7 @@ app.on('activate', () => {
   }
 });
 
-// Ollama API 调用函数
+// Ollama API 调用函数-支持流式输出
 async function callOllamaAPI(message, conversationHistory = []) {
   const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/chat';
   const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
@@ -71,7 +71,7 @@ async function callOllamaAPI(message, conversationHistory = []) {
         role: 'system',
         content: '你是一个友好、专业的AI助手。请用中文回答问题，保持对话的连贯性和上下文理解。回答要详细、准确，并且富有个性。'
       },
-      ...conversationHistory.slice(-10), // 只保留最近10轮对话
+      ...conversationHistory.slice(-8), // 减少到8轮对话
       {
         role: 'user',
         content: message
@@ -81,17 +81,22 @@ async function callOllamaAPI(message, conversationHistory = []) {
     const response = await axios.post(apiUrl, {
       model: model,
       messages: messages,
-      stream: false,
+      stream: false, // 先保持 false，流式输出需要更复杂的实现
       options: {
-        temperature: 0.8,      // 增加创造性（0-2，越高越随机）
-        top_p: 0.9,           // 多样性控制（0-1）
-        repeat_penalty: 1.1   // 减少重复（>1 减少重复）
+        temperature: 0.7,      // 降低一点创造性
+        top_p: 0.8,           // 降低一点多样性
+        repeat_penalty: 1.1,
+        // 提速和减少资源消耗
+        num_predict: 300,     // 进一步限制输出长度
+        num_ctx: 1024,        // 大幅减少上下文长度
+        num_batch: 512,       // 批处理大小
+        num_thread: 4         // 线程数
       }
     }, {
       headers: {
         'Content-Type': 'application/json'
       },
-      timeout: 60000 // 本地部署可能需要更长时间
+      timeout: 30000 // 减少超时时间
     });
 
     return response.data.message.content;
