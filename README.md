@@ -15,7 +15,7 @@
 
 1. 克隆本仓库：
    ```bash
-   git clone <你的仓库地址>
+   git clone git@github.com:y1492183753/pixel-adventure.git
    ```
 2. 安装依赖：
    ```bash
