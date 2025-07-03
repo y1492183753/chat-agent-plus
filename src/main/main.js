@@ -56,7 +56,7 @@ app.whenReady().then(() => {
 async function warmupModel() {
   try {
     console.log('正在预热模型...');
-    await callOllamaAPI('hello', []);
+    await callOllamaAPI('hello', [], () => {}); // 预热时不需要处理流式输出
     console.log('模型预热完成');
   } catch (error) {
     console.log('模型预热失败:', error.message);
@@ -75,8 +75,8 @@ app.on('activate', () => {
   }
 });
 
-// Ollama API 调用函数-支持流式输出
-async function callOllamaAPI(message, conversationHistory = []) {
+// 统一的 Ollama API 调用函数 - 支持流式输出
+async function callOllamaAPI(message, conversationHistory = [], onChunk) {
   const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/chat';
   const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
   
@@ -86,7 +86,7 @@ async function callOllamaAPI(message, conversationHistory = []) {
         role: 'system',
         content: '你是一个友好、专业的AI助手。请用中文回答问题，保持对话的连贯性和上下文理解。回答要详细、准确，并且富有个性。'
       },
-      ...conversationHistory.slice(-8), // 减少到8轮对话
+      ...conversationHistory.slice(-8),
       {
         role: 'user',
         content: message
@@ -96,39 +96,67 @@ async function callOllamaAPI(message, conversationHistory = []) {
     const response = await axios.post(apiUrl, {
       model: model,
       messages: messages,
-      stream: false, // 先保持 false，流式输出需要更复杂的实现
+      stream: true, // 统一使用流式输出
       options: {
-        temperature: 0.7,      // 降低一点创造性
-        top_p: 0.8,           // 降低一点多样性
+        temperature: 0.7,
+        top_p: 0.8,
         repeat_penalty: 1.1,
-        // 提速和减少资源消耗
-        num_predict: 300,     // 进一步限制输出长度
-        num_ctx: 1024,        // 大幅减少上下文长度
-        num_batch: 512,       // 批处理大小
-        num_thread: 4         // 线程数
+        num_predict: 300,
+        num_ctx: 1024,
+        num_batch: 512,
+        num_thread: 4
       }
     }, {
       headers: {
         'Content-Type': 'application/json'
       },
-      timeout: 30000 // 减少超时时间
+      timeout: 30000,
+      responseType: 'stream'
     });
 
-    return response.data.message.content;
+    let fullContent = '';
+    
+    // 处理流式数据
+    return new Promise((resolve, reject) => {
+      response.data.on('data', (chunk) => {
+        const lines = chunk.toString().split('\n');
+        
+        for (const line of lines) {
+          if (line.trim()) {
+            try {
+              const data = JSON.parse(line);
+              if (data.message && data.message.content) {
+                fullContent += data.message.content;
+                // 通过回调发送增量内容
+                onChunk(data.message.content);
+              }
+              // 检查是否完成
+              if (data.done) {
+                resolve(fullContent);
+              }
+            } catch (e) {
+              // 忽略解析错误的行
+            }
+          }
+        }
+      });
+
+      response.data.on('end', () => {
+        resolve(fullContent);
+      });
+
+      response.data.on('error', (error) => {
+        reject(error);
+      });
+    });
+
   } catch (error) {
     console.error('Ollama API Error:', error);
-    
-    if (error.response) {
-      throw new Error(`API Error: ${error.response.status} - ${error.response.data?.error || 'Unknown error'}`);
-    } else if (error.request) {
-      throw new Error('Network error: Unable to connect to Ollama API');
-    } else {
-      throw new Error(`Error: ${error.message}`);
-    }
+    throw error;
   }
 }
 
-// 修改后的 IPC 处理程序，支持对话历史
+// 统一的 IPC 处理程序 - 支持流式输出
 ipcMain.handle('send-message', async (event, message) => {
   try {
     // 将用户消息添加到对话历史
@@ -137,30 +165,48 @@ ipcMain.handle('send-message', async (event, message) => {
       content: message
     });
     
-    const aiResponse = await callOllamaAPI(message, conversationHistory);
+    const messageId = Date.now().toString();
+    
+    // 发送开始信号
+    event.sender.send('message-stream-start', messageId);
+    
+    const fullResponse = await callOllamaAPI(
+      message, 
+      conversationHistory,
+      (chunk) => {
+        // 发送增量内容
+        event.sender.send('message-stream-chunk', messageId, chunk);
+      }
+    );
     
     // 将 AI 回复添加到对话历史
     conversationHistory.push({
       role: 'assistant',
-      content: aiResponse
+      content: fullResponse
     });
     
-    // 限制对话历史长度，避免消耗过多内存
+    // 限制对话历史长度
     if (conversationHistory.length > 20) {
       conversationHistory = conversationHistory.slice(-20);
     }
     
+    // 发送结束信号
+    event.sender.send('message-stream-end', messageId);
+    
     return {
-      id: Date.now().toString(),
-      content: aiResponse,
+      id: messageId,
+      content: fullResponse,
       sender: 'ai',
       timestamp: new Date().toISOString()
     };
   } catch (error) {
     console.error('发送消息失败:', error);
     
+    const messageId = Date.now().toString();
+    event.sender.send('message-stream-error', messageId, error.message);
+    
     return {
-      id: Date.now().toString(),
+      id: messageId,
       content: `抱歉，我现在无法处理您的请求。错误信息: ${error.message}`,
       sender: 'ai',
       timestamp: new Date().toISOString()
@@ -168,13 +214,13 @@ ipcMain.handle('send-message', async (event, message) => {
   }
 });
 
-// 添加清除对话历史的 IPC 处理程序
+// 清除对话历史的 IPC 处理程序
 ipcMain.handle('clear-conversation', async (event) => {
   conversationHistory = [];
   return { success: true };
 });
 
-// 添加获取对话历史的 IPC 处理程序
+// 获取对话历史的 IPC 处理程序
 ipcMain.handle('get-conversation-history', async (event) => {
   return conversationHistory;
 });

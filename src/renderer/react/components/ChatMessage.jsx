@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import '../styles/components/ChatMessage.css';
 
-function ChatMessage({ message }) {
+function ChatMessage({ message, isStreaming = false }) {
   // 使用 useMemo 缓存时间格式化结果
   const formattedTime = useMemo(() => {
     return new Date(message.timestamp).toLocaleTimeString('zh-CN', {
@@ -12,7 +12,7 @@ function ChatMessage({ message }) {
 
   return (
     <div className={`message ${message.sender}`}>
-      <div className="message-content">
+      <div className={`message-content ${isStreaming ? 'streaming' : ''}`}>
         <div className="message-text">{message.content}</div>
         <div className="message-time">{formattedTime}</div>
       </div>
