@@ -52,5 +52,4 @@ PixelAdventure/
 ## 开发与贡献
 欢迎提交 Issue 或 PR 参与改进本项目。
 
-## 许可证
-本项目基于 ISC 协议开源。
+
