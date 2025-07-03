@@ -26,7 +26,16 @@
   color: white;
   font-size: 1.5rem;
   font-weight: 600;
+  margin: 0;
   /* 防止标题被拖拽 */
+  -webkit-app-region: no-drag;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  /* 防止按钮被拖拽 */
   -webkit-app-region: no-drag;
 }
 
@@ -36,8 +45,6 @@
   gap: 0.5rem;
   color: white;
   font-size: 0.875rem;
-  /* 防止状态指示器被拖拽 */
-  -webkit-app-region: no-drag;
 }
 
 .status-dot {
@@ -50,6 +57,41 @@
 .status-dot.loading {
   background-color: #fbbf24;
   animation: pulse 1.5s infinite;
+}
+
+.clear-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clear-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.clear-button:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clear-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes pulse {
@@ -280,6 +322,26 @@
   
   .app-header h1 {
     font-size: 1.25rem;
+  }
+  
+  .header-actions {
+    gap: 0.5rem;
+  }
+  
+  .clear-button {
+    min-width: 36px;
+    height: 36px;
+    padding: 0.4rem 0.6rem;
+    font-size: 1rem;
+  }
+  
+  .status-indicator {
+    font-size: 0.8rem;
+  }
+  
+  .status-dot {
+    width: 6px;
+    height: 6px;
   }
   
   .chat-container {

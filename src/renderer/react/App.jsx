@@ -55,13 +55,40 @@ function App() {
     }
   };
 
+  // 添加清除对话功能
+  const handleClearConversation = async () => {
+    try {
+      await window.electronAPI.clearConversation();
+      setMessages([
+        {
+          id: '1',
+          content: '你好！我是您的 AI 助手，有什么可以帮助您的吗？',
+          sender: 'ai',
+          timestamp: new Date().toISOString()
+        }
+      ]);
+    } catch (error) {
+      console.error('清除对话失败:', error);
+    }
+  };
+
   return (
     <div className="app">
       <header className="app-header">
         <h1>AI 智能助手</h1>
-        <div className="status-indicator">
-          <div className={`status-dot ${isLoading ? 'loading' : 'ready'}`}></div>
-          <span>{isLoading ? '思考中...' : '就绪'}</span>
+        <div className="header-actions">
+          <div className="status-indicator">
+            <div className={`status-dot ${isLoading ? 'loading' : 'ready'}`}></div>
+            <span>{isLoading ? '思考中...' : '就绪'}</span>
+          </div>
+          <button 
+            onClick={handleClearConversation}
+            className="clear-button"
+            title="清除对话"
+            disabled={isLoading}
+          >
+            🗑️
+          </button>
         </div>
       </header>
       
