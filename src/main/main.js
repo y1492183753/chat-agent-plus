@@ -46,7 +46,22 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  createWindow();
+  // 预热模型
+  warmupModel();
+});
+
+// 添加模型预热函数
+async function warmupModel() {
+  try {
+    console.log('正在预热模型...');
+    await callOllamaAPI('hello', []);
+    console.log('模型预热完成');
+  } catch (error) {
+    console.log('模型预热失败:', error.message);
+  }
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
