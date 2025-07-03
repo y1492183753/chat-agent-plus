@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import '../styles/components/ChatMessage.css';
 
 function ChatMessage({ message }) {
   // 使用 useMemo 缓存时间格式化结果

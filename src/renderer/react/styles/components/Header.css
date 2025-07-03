@@ -1,0 +1,112 @@
+.app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    -webkit-app-region: drag;
+    min-height: 60px;
+  }
+  
+  .app-header h1 {
+    color: white;
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin: 0;
+    -webkit-app-region: no-drag;
+  }
+  
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    -webkit-app-region: no-drag;
+  }
+  
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: white;
+    font-size: 0.875rem;
+  }
+  
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #4ade80;
+  }
+  
+  .status-dot.loading {
+    background-color: #fbbf24;
+    animation: pulse 1.5s infinite;
+  }
+  
+  .clear-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .clear-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+  
+  .clear-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .clear-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 响应式设计 */
+  @media (max-width: 640px) {
+    .app-header {
+      padding: 0.75rem 1rem;
+    }
+    
+    .app-header h1 {
+      font-size: 1.25rem;
+    }
+    
+    .header-actions {
+      gap: 0.5rem;
+    }
+    
+    .clear-button {
+      min-width: 36px;
+      height: 36px;
+      padding: 0.4rem 0.6rem;
+      font-size: 1rem;
+    }
+    
+    .status-indicator {
+      font-size: 0.8rem;
+    }
+    
+    .status-dot {
+      width: 6px;
+      height: 6px;
+    }
+  }

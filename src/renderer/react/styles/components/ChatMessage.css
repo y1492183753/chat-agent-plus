@@ -1,0 +1,55 @@
+.message {
+    margin-bottom: 1rem;
+    display: flex;
+  }
+  
+  .message.user {
+    justify-content: flex-end;
+  }
+  
+  .message.ai {
+    justify-content: flex-start;
+  }
+  
+  .message-content {
+    max-width: 70%;
+    padding: 0.75rem 1rem;
+    border-radius: 1rem;
+    position: relative;
+  }
+  
+  .message.user .message-content {
+    background: #3b82f6;
+    color: white;
+    border-bottom-right-radius: 0.25rem;
+  }
+  
+  .message.ai .message-content {
+    background: #f3f4f6;
+    color: #374151;
+    border-bottom-left-radius: 0.25rem;
+  }
+  
+  .message-text {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    line-height: 1.5;
+  }
+  
+  .message-time {
+    font-size: 0.75rem;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+    text-align: right;
+  }
+  
+  .message.ai .message-time {
+    text-align: left;
+  }
+  
+  /* 响应式设计 */
+  @media (max-width: 640px) {
+    .message-content {
+      max-width: 85%;
+    }
+  }

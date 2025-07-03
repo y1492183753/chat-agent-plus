@@ -1,0 +1,25 @@
+.typing-indicator {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 1rem;
+  }
+  
+  .typing-dots {
+    background: #f3f4f6;
+    border-radius: 1rem;
+    border-bottom-left-radius: 0.25rem;
+    padding: 0.75rem 1rem;
+    display: flex;
+    gap: 0.25rem;
+  }
+  
+  .typing-dots .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #9ca3af;
+    animation: typing 1.4s infinite ease-in-out;
+  }
+  
+  .typing-dots .dot:nth-child(1) { animation-delay: -0.32s; }
+  .typing-dots .dot:nth-child(2) { animation-delay: -0.16s; }
