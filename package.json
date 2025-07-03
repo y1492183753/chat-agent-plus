@@ -1,24 +1,44 @@
 {
-  "name": "pixel-adventure",
+  "name": "ai-agent-chat",
   "version": "1.0.0",
-  "description": "A pixel-style platform adventure game built with Electron",
+  "description": "An AI agent chat application built with Electron and React",
   "main": "src/main/main.js",
   "scripts": {
-    "start": "electron .",
-    "dev": "NODE_ENV=development electron .",
-    "build": "electron-builder",
+    "start": "npm run build:react && electron .",
+    "dev": "npm run build:react && NODE_ENV=development electron .",
+    "build:react": "webpack --mode production",
+    "build:react:dev": "webpack --mode development",
+    "build:react:watch": "webpack --mode development --watch",
+    "build": "npm run build:react && electron-builder",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "YaoJiaHao",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^37.1.0"
+    "electron": "^37.1.0",
+    "@babel/core": "^7.22.0",
+    "@babel/preset-env": "^7.22.0",
+    "@babel/preset-react": "^7.22.0",
+    "babel-loader": "^9.1.0",
+    "css-loader": "^6.8.0",
+    "html-webpack-plugin": "^5.5.0",
+    "style-loader": "^3.3.0",
+    "webpack": "^5.88.0",
+    "webpack-cli": "^5.1.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "axios": "^1.6.0",
+    "uuid": "^9.0.0"
   },
   "keywords": [
     "electron",
-    "game",
-    "pixel",
-    "platform",
-    "adventure"
+    "ai",
+    "chat",
+    "agent",
+    "conversation",
+    "react"
   ]
 }

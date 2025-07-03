@@ -28,19 +28,29 @@
 
 ## 目录结构
 ```
-PixelAdventure/
-├── assets/           # 游戏资源（图片、音频、字体）
-├── config/           # 配置文件
-├── docs/             # 文档
+pixel-adventure/
 ├── src/
-│   ├── main/         # Electron 主进程
-│   └── renderer/     # 渲染进程（游戏核心）
-│       ├── js/       # 游戏逻辑与系统
-│       ├── styles/   # 样式文件
-│       └── views/    # 页面模板
-├── tests/            # 测试
-├── package.json      # 项目配置
-└── README.md         # 项目说明
+│   ├── main/
+│   │   └── main.js
+│   └── renderer/
+│       ├── js/           # 原有的游戏逻辑
+│       ├── styles/       # 原有的样式
+│       ├── views/        # 原有的HTML页面
+│       └── react/        # 新增的React应用
+│           ├── components/
+│           │   ├── GameCanvas.jsx
+│           │   ├── GameUI.jsx
+│           │   └── MenuScreen.jsx
+│           ├── styles/
+│           │   ├── index.css
+│           │   └── App.css
+│           ├── App.jsx
+│           ├── index.js
+│           └── index.html
+├── dist/                 # Webpack构建输出
+├── webpack.config.js     # Webpack配置
+├── .babelrc             # Babel配置
+└── package.json         # 更新的依赖
 ```
 
 ## 玩法说明
