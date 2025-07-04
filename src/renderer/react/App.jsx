@@ -33,7 +33,7 @@ function App() {
     // 设置初始欢迎消息
     const welcomeMessage = {
       id: '1',
-      content: config.aiIntro,
+      content: `你好！我是${config.aiName}，${config.aiPersonality}。很高兴为您服务！✨`,
       sender: 'ai',
       timestamp: new Date().toISOString()
     };
@@ -157,7 +157,7 @@ function App() {
       setMessages([
         {
           id: '1',
-          content: userConfig?.aiIntro || '你好！我是您的 AI 助手，有什么可以帮助您的吗？✨',
+          content: `你好！我是${userConfig?.aiName}，${userConfig?.aiPersonality || '您的智能助手'}。很高兴为您服务！✨`,
           sender: 'ai',
           timestamp: new Date().toISOString()
         }

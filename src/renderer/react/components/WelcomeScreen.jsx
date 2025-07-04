@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import '../styles/components/WelcomeScreen.css';
 
 function WelcomeScreen({ onStart }) {
   const [userGender, setUserGender] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('');
+  const [customName, setCustomName] = useState(''); // 新增：自定义名字
   const [agentIntro, setAgentIntro] = useState('');
   const [step, setStep] = useState(1);
 
@@ -24,7 +25,7 @@ function WelcomeScreen({ onStart }) {
   const canProceed = () => {
     if (step === 1) return userGender !== '';
     if (step === 2) return selectedAgent !== '';
-    if (step === 3) return true; // 介绍是可选的
+    if (step === 3) return customName.trim() !== ''; // 名字是必填的
     return false;
   };
 
@@ -36,14 +37,28 @@ function WelcomeScreen({ onStart }) {
     }
   };
 
+  // 当选择新的助手时，自动填充默认名字
+  const handleAgentSelect = (agentId) => {
+    setSelectedAgent(agentId);
+    const selectedAgentData = agentAvatars.find(agent => agent.id === agentId);
+    if (selectedAgentData && !customName) {
+      setCustomName(selectedAgentData.name);
+    }
+  };
+
   const handleStart = () => {
     const selectedAgentData = agentAvatars.find(agent => agent.id === selectedAgent);
+    const finalName = customName.trim() || selectedAgentData.name;
+    
+    // 生成默认介绍（如果用户没有自定义）
+    const defaultIntro = `你好！我是${finalName}，一个${selectedAgentData.personality}的AI助手。很高兴为您服务！✨`;
+    
     const config = {
       userAvatar: userAvatars[userGender],
       aiAvatar: selectedAgentData.file,
-      aiName: selectedAgentData.name,
+      aiName: finalName,
       aiPersonality: selectedAgentData.personality,
-      aiIntro: agentIntro || `你好！我是${selectedAgentData.name}，${selectedAgentData.personality}。很高兴为您服务！`
+      aiIntro: agentIntro.trim() || defaultIntro
     };
     onStart(config);
   };
@@ -106,7 +121,7 @@ function WelcomeScreen({ onStart }) {
                   <div 
                     key={agent.id}
                     className={`agent-option ${selectedAgent === agent.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedAgent(agent.id)}
+                    onClick={() => handleAgentSelect(agent.id)}
                   >
                     <div className="agent-avatar">
                       <img src={require(`../../../assets/head/${agent.file}`)} alt={agent.name} />
@@ -121,24 +136,45 @@ function WelcomeScreen({ onStart }) {
             </div>
           )}
 
-          {/* 第三步：个性化介绍 */}
+          {/* 第三步：自定义名字和介绍 */}
           {step === 3 && (
             <div className="step-content">
-              <h2>为您的助手添加个性化介绍</h2>
+              <h2>为您的助手取个名字并添加个性化介绍</h2>
               <div className="intro-section">
                 <div className="selected-agent-preview">
                   <img src={require(`../../../assets/head/${agentAvatars.find(a => a.id === selectedAgent)?.file}`)} alt="选中的助手" />
-                  <h3>{agentAvatars.find(a => a.id === selectedAgent)?.name}</h3>
+                  <h3>{customName || agentAvatars.find(a => a.id === selectedAgent)?.name}</h3>
                 </div>
-                <textarea
-                  className="intro-textarea"
-                  placeholder={`为${agentAvatars.find(a => a.id === selectedAgent)?.name}添加个性化介绍...（可选）`}
-                  value={agentIntro}
-                  onChange={(e) => setAgentIntro(e.target.value)}
-                  rows="4"
-                  maxLength="200"
-                />
-                <div className="char-count">{agentIntro.length}/200</div>
+                
+                {/* 名字输入框 */}
+                <div className="name-input-container">
+                  <label htmlFor="ai-name">助手名字 *</label>
+                  <input
+                    id="ai-name"
+                    type="text"
+                    className="name-input"
+                    placeholder="为您的助手起个名字..."
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    maxLength="20"
+                  />
+                  <div className="char-count">{customName.length}/20</div>
+                </div>
+
+                {/* 介绍输入框 */}
+                <div className="intro-input-container">
+                  <label htmlFor="ai-intro">个性化介绍（可选）</label>
+                  <textarea
+                    id="ai-intro"
+                    className="intro-textarea"
+                    placeholder={`为${customName || '您的助手'}添加个性化介绍或提示词...`}
+                    value={agentIntro}
+                    onChange={(e) => setAgentIntro(e.target.value)}
+                    rows="4"
+                    maxLength="300"
+                  />
+                  <div className="char-count">{agentIntro.length}/300</div>
+                </div>
               </div>
             </div>
           )}
