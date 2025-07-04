@@ -163,9 +163,9 @@ function WelcomeScreen({ onStart }) {
                     value={agentIntro}
                     onChange={(e) => setAgentIntro(e.target.value)}
                     rows="4"
-                    maxLength="300"
+                    maxLength="1000"
                   />
-                  <div className="char-count">{agentIntro.length}/300</div>
+                  <div className="char-count">{agentIntro.length}/1000</div>
                 </div>
               </div>
             </div>
