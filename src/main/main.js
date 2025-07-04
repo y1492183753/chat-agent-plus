@@ -52,11 +52,24 @@ app.whenReady().then(() => {
   warmupModel();
 });
 
-// 添加模型预热函数
+// 修改预热函数，不污染对话历史
 async function warmupModel() {
   try {
     console.log('正在预热模型...');
-    await callOllamaAPI('hello', [], () => {}); // 预热时不需要处理流式输出
+    // 使用独立的预热调用，不影响对话历史
+    const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/chat';
+    const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
+    
+    await axios.post(apiUrl, {
+      model: model,
+      messages: [{ role: 'user', content: 'hello' }],
+      stream: false,
+      options: { num_predict: 1 }
+    }, {
+      headers: { 'Content-Type': 'application/json' },
+      timeout: 10000
+    });
+    
     console.log('模型预热完成');
   } catch (error) {
     console.log('模型预热失败:', error.message);
