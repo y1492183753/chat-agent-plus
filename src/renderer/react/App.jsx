@@ -4,12 +4,14 @@ import MessageInput from './components/MessageInput';
 import './styles/App.css';
 import './styles/components/Header.css';
 import './styles/components/TypingIndicator.css';
+// 引入彩虹泡泡主题
+import './styles/themes/rainbow-bubble.css';
 
 function App() {
   const [messages, setMessages] = useState([
     {
       id: '1',
-      content: '你好！我是您的 AI 助手，有什么可以帮助您的吗？',
+      content: '你好！我是您的 AI 助手，有什么可以帮助您的吗？✨',
       sender: 'ai',
       timestamp: new Date().toISOString()
     }
@@ -21,7 +23,7 @@ function App() {
 
   const [userAvatar, setUserAvatar] = useState('boy.jpg'); // 默认用户头像
   const [aiAvatar, setAiAvatar] = useState('ai-0.jpg'); // 默认AI头像
-  // 添加头像设置状态 
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -147,7 +149,7 @@ function App() {
       setMessages([
         {
           id: '1',
-          content: '你好！我是您的 AI 助手，有什么可以帮助您的吗？',
+          content: '你好！我是您的 AI 助手，有什么可以帮助您的吗？✨',
           sender: 'ai',
           timestamp: new Date().toISOString()
         }
@@ -162,7 +164,7 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>AI 智能助手</h1>
+        <h1>🌈 AI 智能助手 ✨</h1>
         <div className="header-actions">
           <div className="status-indicator">
             <div className={`status-dot ${isLoading || isStreaming ? 'loading' : 'ready'}`}></div>
@@ -174,7 +176,14 @@ function App() {
             title="清除对话"
             disabled={isLoading || isStreaming}
           >
-            🗑️
+            <svg 
+              width="16" 
+              height="16" 
+              viewBox="0 0 24 24" 
+              fill="currentColor"
+            >
+              <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+            </svg>
           </button>
         </div>
       </header>
@@ -197,6 +206,13 @@ function App() {
           {/* 显示加载状态 */}
           {isLoading && (
             <div className="typing-indicator">
+              <div className="typing-avatar">
+                <img 
+                  src={require(`../../assets/head/${aiAvatar}`)} 
+                  alt="AI助手"
+                  className="typing-avatar-image"
+                />
+              </div>
               <div className="typing-dots">
                 <div className="dot"></div>
                 <div className="dot"></div>

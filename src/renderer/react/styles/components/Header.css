@@ -11,7 +11,7 @@
   }
   
   .app-header h1 {
-    color: white;
+    color: #333;
     font-size: 1.5rem;
     font-weight: 600;
     margin: 0;
@@ -29,7 +29,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    color: white;
+    color: #333;
     font-size: 0.875rem;
   }
   
@@ -48,7 +48,7 @@
   .clear-button {
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    color: #333;
     padding: 0.5rem 0.8rem;
     border-radius: 8px;
     cursor: pointer;

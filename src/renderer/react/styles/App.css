@@ -22,7 +22,7 @@
 .messages-area {
   flex: 1;
   overflow-y: auto;
-  background: white;
+  background: #333;
   border-radius: 1rem;
   padding: 1rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
