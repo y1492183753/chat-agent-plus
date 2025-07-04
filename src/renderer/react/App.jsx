@@ -19,6 +19,9 @@ function App() {
   const [currentStreamMessage, setCurrentStreamMessage] = useState(null);
   const messagesEndRef = useRef(null);
 
+  const [userAvatar, setUserAvatar] = useState('boy.jpg'); // 默认用户头像
+  const [aiAvatar, setAiAvatar] = useState('ai-0.jpg'); // 默认AI头像
+  // 添加头像设置状态 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -106,11 +109,12 @@ function App() {
   const handleSendMessage = async (content) => {
     if (!content.trim()) return;
   
-    // 添加用户消息
+    // 添加用户消息（包含头像信息）
     const userMessage = {
       id: Date.now().toString(),
       content: content.trim(),
       sender: 'user',
+      avatar: userAvatar,
       timestamp: new Date().toISOString()
     };
   
@@ -129,6 +133,7 @@ function App() {
         id: (Date.now() + 1).toString(),
         content: '抱歉，发送消息时出现错误，请稍后重试。',
         sender: 'ai',
+        avatar: aiAvatar,
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, errorMessage]);
