@@ -38,15 +38,46 @@ function App() {
       console.error('设置用户配置失败:', error);
     }
     
-    // 设置初始欢迎消息
-    const welcomeMessage = {
-      id: '1',
-      content: `欢迎欢迎✨`,
-      sender: 'ai',
-      timestamp: new Date().toISOString()
-    };
-    setMessages([welcomeMessage]);
+    // 删除固定欢迎语，让AI主动介绍
+    setMessages([]); // 初始化为空数组
+    
+    // 让AI主动进行自我介绍
+    setTimeout(() => {
+      initializeAIGreeting();
+    }, 500);
   };
+
+  // 新增AI主动介绍函数
+const initializeAIGreeting = async () => {
+  try {
+    setIsLoading(true);
+    
+    // 发送初始化提示让AI自我介绍
+    const introPrompt = '这是你第一次见到用户，请简短地自我介绍一下，告诉用户你是谁，你能做什么。不要询问用户需要什么帮助，直接介绍即可。';
+    
+    await window.electronAPI.sendMessage(introPrompt);
+  } catch (error) {
+    console.error('AI初始化介绍失败:', error);
+    setIsLoading(false);
+  }
+};
+
+// 同时修改清除对话功能，删除固定欢迎语
+const handleClearConversation = async () => {
+  try {
+    await window.electronAPI.clearConversation();
+    setMessages([]); // 清空为空数组
+    setCurrentStreamMessage(null);
+    setIsStreaming(false);
+    
+    // 重新让AI介绍
+    setTimeout(() => {
+      initializeAIGreeting();
+    }, 300);
+  } catch (error) {
+    console.error('清除对话失败:', error);
+  }
+};
 
   // 设置流式输出监听器
   useEffect(() => {
@@ -155,25 +186,6 @@ function App() {
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, errorMessage]);
-    }
-  };
-
-  // 添加清除对话功能
-  const handleClearConversation = async () => {
-    try {
-      await window.electronAPI.clearConversation();
-      setMessages([
-        {
-          id: '1',
-          content: `欢迎欢迎✨`,
-          sender: 'ai',
-          timestamp: new Date().toISOString()
-        }
-      ]);
-      setCurrentStreamMessage(null);
-      setIsStreaming(false);
-    } catch (error) {
-      console.error('清除对话失败:', error);
     }
   };
 
