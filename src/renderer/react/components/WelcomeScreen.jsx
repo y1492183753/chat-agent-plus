@@ -15,11 +15,11 @@ function WelcomeScreen({ onStart }) {
   };
 
   const agentAvatars = [
-    { id: 'ai-0', name: '优雅助手', file: 'ai-0.jpg', personality: '温和、专业、善于分析' },
-    { id: 'ai-1', name: '活力助手', file: 'ai-1.jpg', personality: '活泼、创新、充满想象力' },
-    { id: 'ai-2', name: '智慧助手', file: 'ai-2.jpg', personality: '博学、理性、逻辑清晰' },
-    { id: 'ai-3', name: '友善助手', file: 'ai-3.jpg', personality: '亲切、耐心、善于倾听' },
-    { id: 'ai-4', name: '创意助手', file: 'ai-4.jpg', personality: '艺术、感性、富有创造力' }
+    { id: 'ai-0', name: '优雅助手', file: 'ai-0.jpg' },
+    { id: 'ai-1', name: '活力助手', file: 'ai-1.jpg' },
+    { id: 'ai-2', name: '智慧助手', file: 'ai-2.jpg' },
+    { id: 'ai-3', name: '友善助手', file: 'ai-3.jpg' },
+    { id: 'ai-4', name: '创意助手', file: 'ai-4.jpg' }
   ];
 
   const canProceed = () => {
@@ -49,17 +49,13 @@ function WelcomeScreen({ onStart }) {
   const handleStart = () => {
     const selectedAgentData = agentAvatars.find(agent => agent.id === selectedAgent);
     const finalName = customName.trim() || selectedAgentData.name;
-    
-    // 生成默认介绍（如果用户没有自定义）
-    const defaultIntro = `你好！我是${finalName}，一个${selectedAgentData.personality}的AI助手。很高兴为您服务！✨`;
-    
+    // 简化配置，只保留用户自定义的内容
     const config = {
-      userAvatar: userAvatars[userGender],
-      aiAvatar: selectedAgentData.file,
-      aiName: finalName,
-      aiPersonality: selectedAgentData.personality,
-      aiIntro: agentIntro.trim() || defaultIntro
-    };
+        userAvatar: userAvatars[userGender],
+        aiAvatar: selectedAgentData.file,
+        aiName: finalName,
+        aiIntro: agentIntro.trim() || `你好！我是${finalName}，很高兴为您服务！✨`
+      };
     onStart(config);
   };
 
@@ -115,7 +111,7 @@ function WelcomeScreen({ onStart }) {
           {/* 第二步：选择 Agent */}
           {step === 2 && (
             <div className="step-content">
-              <h2>选择您的 AI 助手</h2>
+              <h2>选择您的 AI 助手头像</h2>
               <div className="agent-grid">
                 {agentAvatars.map(agent => (
                   <div 
@@ -125,10 +121,6 @@ function WelcomeScreen({ onStart }) {
                   >
                     <div className="agent-avatar">
                       <img src={require(`../../../assets/head/${agent.file}`)} alt={agent.name} />
-                    </div>
-                    <div className="agent-info">
-                      <h3>{agent.name}</h3>
-                      <p>{agent.personality}</p>
                     </div>
                   </div>
                 ))}

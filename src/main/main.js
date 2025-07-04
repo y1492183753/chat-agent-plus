@@ -6,6 +6,8 @@ require('dotenv').config();
 let mainWindow;
 // 添加全局变量来存储对话历史
 let conversationHistory = [];
+// 添加用户配置全局变量
+let userConfig = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -94,12 +96,23 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk) {
   const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
   
   try {
+    // 动态构建系统消息，使用用户配置的AI个性
+    let systemContent = '你是个和善、专业的AI助手。';
+    
+    if (userConfig && userConfig.aiIntro) {
+      systemContent = userConfig.aiIntro;
+    } else if (userConfig && userConfig.aiName) {
+      systemContent = `你是${userConfig.aiName}，一个友善、专业的AI助手。`;
+    }
+
+    console.log('调用 Ollama API:', systemContent)
+
     const messages = [
       {
         role: 'system',
-        content: '你是一个友好、专业的AI助手。请用中文回答问题，保持对话的连贯性和上下文理解。回答要详细、准确，并且富有个性。'
+        content: systemContent
       },
-      ...conversationHistory.slice(-8),
+      ...conversationHistory.slice(-20), // 仅保留最近的20条消息
       {
         role: 'user',
         content: message
@@ -111,13 +124,13 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk) {
       messages: messages,
       stream: true, // 统一使用流式输出
       options: {
-        temperature: 0.7,
-        top_p: 0.8,
-        repeat_penalty: 1.1,
-        num_predict: 300,
-        num_ctx: 1024,
-        num_batch: 512,
-        num_thread: 4
+        temperature: 0.8,        // 提高创造性和多样性
+        top_p: 0.9,             // 增加词汇选择范围
+        repeat_penalty: 1.15,    // 稍微提高重复惩罚
+        num_predict: 800,        // 大幅增加最大生成长度
+        num_ctx: 4096,          // 显著增加上下文窗口
+        num_batch: 1024,        // 提高批处理大小
+        num_thread: 8           // 增加线程数（根据CPU核心数调整）
       }
     }, {
       headers: {
@@ -169,7 +182,14 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk) {
   }
 }
 
-// 统一的 IPC 处理程序 - 支持流式输出
+// 新增设置用户配置的 IPC 处理程序
+ipcMain.handle('set-user-config', async (event, config) => {
+  userConfig = config;
+  console.log('用户配置已设置:', userConfig);
+  return { success: true };
+});
+
+// 统一的 IPC 处理程序 - 支持流式输出，增加错误处理
 ipcMain.handle('send-message', async (event, message) => {
   try {
     // 将用户消息添加到对话历史
@@ -180,15 +200,27 @@ ipcMain.handle('send-message', async (event, message) => {
     
     const messageId = Date.now().toString();
     
-    // 发送开始信号
-    event.sender.send('message-stream-start', messageId);
+    // 安全地发送开始信号
+    try {
+      if (event.sender && !event.sender.isDestroyed()) {
+        event.sender.send('message-stream-start', messageId);
+      }
+    } catch (sendError) {
+      console.warn('Failed to send stream start:', sendError.message);
+    }
     
     const fullResponse = await callOllamaAPI(
       message, 
       conversationHistory,
       (chunk) => {
-        // 发送增量内容
-        event.sender.send('message-stream-chunk', messageId, chunk);
+        // 安全地发送增量内容
+        try {
+          if (event.sender && !event.sender.isDestroyed()) {
+            event.sender.send('message-stream-chunk', messageId, chunk);
+          }
+        } catch (sendError) {
+          console.warn('Failed to send chunk:', sendError.message);
+        }
       }
     );
     
@@ -203,8 +235,14 @@ ipcMain.handle('send-message', async (event, message) => {
       conversationHistory = conversationHistory.slice(-20);
     }
     
-    // 发送结束信号
-    event.sender.send('message-stream-end', messageId);
+    // 安全地发送结束信号
+    try {
+      if (event.sender && !event.sender.isDestroyed()) {
+        event.sender.send('message-stream-end', messageId);
+      }
+    } catch (sendError) {
+      console.warn('Failed to send stream end:', sendError.message);
+    }
     
     return {
       id: messageId,
@@ -216,7 +254,15 @@ ipcMain.handle('send-message', async (event, message) => {
     console.error('发送消息失败:', error);
     
     const messageId = Date.now().toString();
-    event.sender.send('message-stream-error', messageId, error.message);
+    
+    // 安全地发送错误信号
+    try {
+      if (event.sender && !event.sender.isDestroyed()) {
+        event.sender.send('message-stream-error', messageId, error.message);
+      }
+    } catch (sendError) {
+      console.warn('Failed to send error:', sendError.message);
+    }
     
     return {
       id: messageId,

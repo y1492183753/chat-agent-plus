@@ -26,14 +26,22 @@ function App() {
   }, [messages, currentStreamMessage]);
 
   // 处理欢迎页面完成
-  const handleWelcomeComplete = (config) => {
+  const handleWelcomeComplete = async (config) => {
     setUserConfig(config);
     setShowWelcome(false);
+    
+    // 将用户配置发送到主进程
+    try {
+      await window.electronAPI.setUserConfig(config);
+      console.log('用户配置已发送到主进程:', config);
+    } catch (error) {
+      console.error('设置用户配置失败:', error);
+    }
     
     // 设置初始欢迎消息
     const welcomeMessage = {
       id: '1',
-      content: `你好！我是${config.aiName}，${config.aiPersonality}。很高兴为您服务！✨`,
+      content: `你好！我是${config.aiName}✨`,
       sender: 'ai',
       timestamp: new Date().toISOString()
     };
@@ -157,7 +165,7 @@ function App() {
       setMessages([
         {
           id: '1',
-          content: `你好！我是${userConfig?.aiName}，${userConfig?.aiPersonality || '您的智能助手'}。很高兴为您服务！✨`,
+          content: `你好！我是${userConfig?.aiName || 'AI助手'}✨`,
           sender: 'ai',
           timestamp: new Date().toISOString()
         }

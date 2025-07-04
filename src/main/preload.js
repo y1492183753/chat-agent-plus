@@ -6,6 +6,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   clearConversation: () => ipcRenderer.invoke('clear-conversation'),
   getConversationHistory: () => ipcRenderer.invoke('get-conversation-history'),
   
+  // 【新增】设置用户配置
+  setUserConfig: (config) => ipcRenderer.invoke('set-user-config', config),
+  
   // 流式输出事件监听
   onMessageStreamStart: (callback) => ipcRenderer.on('message-stream-start', callback),
   onMessageStreamChunk: (callback) => ipcRenderer.on('message-stream-chunk', callback),
