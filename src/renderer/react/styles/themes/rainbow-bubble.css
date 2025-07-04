@@ -69,7 +69,7 @@
 /* 添加全页面彩虹扫过效果 */
 .app .rainbow-glow {
   content: '';
-  position: absolute;
+  position: fixed;
   top: -50%;
   left: -200%;
   width: 300%;

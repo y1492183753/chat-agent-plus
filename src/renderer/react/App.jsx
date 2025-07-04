@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ChatMessage from './components/ChatMessage';
 import MessageInput from './components/MessageInput';
+import WelcomeScreen from './components/WelcomeScreen';
 import './styles/App.css';
 import './styles/components/Header.css';
 import './styles/components/TypingIndicator.css';
@@ -8,22 +9,14 @@ import './styles/components/TypingIndicator.css';
 import './styles/themes/rainbow-bubble.css';
 
 function App() {
-  const [messages, setMessages] = useState([
-    {
-      id: '1',
-      content: '你好！我是您的 AI 助手，有什么可以帮助您的吗？✨',
-      sender: 'ai',
-      timestamp: new Date().toISOString()
-    }
-  ]);
+  const [showWelcome, setShowWelcome] = useState(true);
+  const [userConfig, setUserConfig] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [currentStreamMessage, setCurrentStreamMessage] = useState(null);
   const messagesEndRef = useRef(null);
 
-  const [userAvatar, setUserAvatar] = useState('boy.jpg'); // 默认用户头像
-  const [aiAvatar, setAiAvatar] = useState('ai-0.jpg'); // 默认AI头像
-  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -32,8 +25,25 @@ function App() {
     scrollToBottom();
   }, [messages, currentStreamMessage]);
 
+  // 处理欢迎页面完成
+  const handleWelcomeComplete = (config) => {
+    setUserConfig(config);
+    setShowWelcome(false);
+    
+    // 设置初始欢迎消息
+    const welcomeMessage = {
+      id: '1',
+      content: config.aiIntro,
+      sender: 'ai',
+      timestamp: new Date().toISOString()
+    };
+    setMessages([welcomeMessage]);
+  };
+
   // 设置流式输出监听器
   useEffect(() => {
+    if (showWelcome) return; // 如果还在欢迎页面，不设置监听器
+
     const handleStreamStart = (event, messageId) => {
       console.log('Stream started:', messageId);
       setIsStreaming(true);
@@ -106,17 +116,16 @@ function App() {
       window.electronAPI.removeAllListeners('message-stream-end');
       window.electronAPI.removeAllListeners('message-stream-error');
     };
-  }, []);
+  }, [showWelcome]);
 
   const handleSendMessage = async (content) => {
     if (!content.trim()) return;
   
-    // 添加用户消息（包含头像信息）
+    // 添加用户消息
     const userMessage = {
       id: Date.now().toString(),
       content: content.trim(),
       sender: 'user',
-      avatar: userAvatar,
       timestamp: new Date().toISOString()
     };
   
@@ -135,7 +144,6 @@ function App() {
         id: (Date.now() + 1).toString(),
         content: '抱歉，发送消息时出现错误，请稍后重试。',
         sender: 'ai',
-        avatar: aiAvatar,
         timestamp: new Date().toISOString()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -149,7 +157,7 @@ function App() {
       setMessages([
         {
           id: '1',
-          content: '你好！我是您的 AI 助手，有什么可以帮助您的吗？✨',
+          content: userConfig?.aiIntro || '你好！我是您的 AI 助手，有什么可以帮助您的吗？✨',
           sender: 'ai',
           timestamp: new Date().toISOString()
         }
@@ -161,10 +169,18 @@ function App() {
     }
   };
 
+  // 如果显示欢迎页面
+  if (showWelcome) {
+    return <WelcomeScreen onStart={handleWelcomeComplete} />;
+  }
+
   return (
     <div className="app">
+      {/* 使用 React 方式管理彩虹光效，替代动态DOM操作 */}
+      <div className="rainbow-glow"></div>
+      
       <header className="app-header">
-        <h1>🌈 AI 智能助手 ✨</h1>
+        <h1>🌈 {userConfig?.aiName || 'AI 智能助手'} ✨</h1>
         <div className="header-actions">
           <div className="status-indicator">
             <div className={`status-dot ${isLoading || isStreaming ? 'loading' : 'ready'}`}></div>
@@ -191,7 +207,12 @@ function App() {
       <main className="chat-container">
         <div className="messages-area">
           {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
+            <ChatMessage 
+              key={message.id} 
+              message={message}
+              userAvatar={userConfig?.userAvatar}
+              aiAvatar={userConfig?.aiAvatar}
+            />
           ))}
           
           {/* 显示当前流式输出的消息 */}
@@ -200,6 +221,8 @@ function App() {
               key={currentStreamMessage.id} 
               message={currentStreamMessage} 
               isStreaming={true}
+              userAvatar={userConfig?.userAvatar}
+              aiAvatar={userConfig?.aiAvatar}
             />
           )}
           
@@ -208,7 +231,7 @@ function App() {
             <div className="typing-indicator">
               <div className="typing-avatar">
                 <img 
-                  src={require(`../../assets/head/${aiAvatar}`)} 
+                  src={require(`../../assets/head/${userConfig?.aiAvatar || 'ai-0.jpg'}`)} 
                   alt="AI助手"
                   className="typing-avatar-image"
                 />
