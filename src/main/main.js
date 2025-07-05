@@ -50,22 +50,9 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  // 预热模型
-  warmupModel();
+  // 每次应用启动时清空对话历史
+  conversationHistory = [];
 });
-
-// 修改预热函数，使用现有的 callOllamaAPI 函数
-async function warmupModel() {
-  try {
-    console.log('正在预热模型...');
-    await callOllamaAPI('hello', [], () => {}); // 预热时不需要处理流式输出
-    // 预热完成后清空对话历史，不污染用户对话
-    conversationHistory = [];
-    console.log('模型预热完成');
-  } catch (error) {
-    console.log('模型预热失败:', error.message);
-  }
-}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
@@ -115,11 +102,11 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk) {
       messages: messages,
       stream: true, // 统一使用流式输出
       options: {
-        temperature: 0.3,        // 提高角色一致性
-        top_p: 0.9,             // 增加词汇选择范围
+        temperature: 0.1,        // 提高角色一致性
+        top_p: 0.8,             // 增加词汇选择范围
         repeat_penalty: 1.15,    // 稍微提高重复惩罚
         num_predict: 800,        // 大幅增加最大生成长度
-        num_ctx: 4096,          // 显著增加上下文窗口
+        num_ctx: 8192,          // 显著增加上下文窗口
         num_batch: 1024,        // 提高批处理大小
         num_thread: 8           // 增加线程数（根据CPU核心数调整）
       }
