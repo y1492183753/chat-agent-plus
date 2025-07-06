@@ -50,8 +50,9 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  // 每次应用启动时清空对话历史
   conversationHistory = [];
+  // Ollama 预热，提升首次响应速度，isWarmup=true
+  callOllamaAPI('你好', [], () => {}, true).catch(() => {});
 });
 
 app.on('window-all-closed', () => {
@@ -67,7 +68,8 @@ app.on('activate', () => {
 });
 
 // 统一的 Ollama API 调用函数 - 支持流式输出
-async function callOllamaAPI(message, conversationHistory = [], onChunk) {
+// 新增 isWarmup 参数，预热时不写入历史
+async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmup = false) {
   const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/chat';
   const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
   
@@ -124,15 +126,16 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk) {
     return new Promise((resolve, reject) => {
       response.data.on('data', (chunk) => {
         const lines = chunk.toString().split('\n');
-        
         for (const line of lines) {
           if (line.trim()) {
             try {
               const data = JSON.parse(line);
               if (data.message && data.message.content) {
                 fullContent += data.message.content;
-                // 通过回调发送增量内容
-                onChunk(data.message.content);
+                // 仅非预热时才回调
+                if (!isWarmup) {
+                  onChunk(data.message.content);
+                }
               }
               // 检查是否完成
               if (data.done) {
@@ -144,11 +147,9 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk) {
           }
         }
       });
-
       response.data.on('end', () => {
         resolve(fullContent);
       });
-
       response.data.on('error', (error) => {
         reject(error);
       });
@@ -199,7 +200,8 @@ ipcMain.handle('send-message', async (event, message) => {
         } catch (sendError) {
           console.warn('Failed to send chunk:', sendError.message);
         }
-      }
+      },
+      false // 普通对话不是预热
     );
     
     // 将 AI 回复添加到对话历史
