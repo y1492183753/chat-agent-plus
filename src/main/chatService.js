@@ -20,6 +20,7 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmu
     if (kbContext && kbContext.trim()) {
       systemContent = `【知识库参考】\n${kbContext}\n\n${systemContent}`;
     }
+    
     const messages = [
       { role: 'system', content: systemContent },
       ...conversationHistory,

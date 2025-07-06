@@ -70,7 +70,7 @@ function WelcomeScreen({ onStart }) {
         userAvatar: userAvatars[userGender],
         aiAvatar: selectedAgentData.file,
         aiName: finalName,
-        aiIntro: agentIntro.trim() || `你好！我是${finalName}，很高兴为您服务！✨`
+        aiIntro: agentIntro.trim() 
       };
     onStart(config);
   };
