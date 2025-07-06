@@ -217,7 +217,6 @@ function WelcomeScreen({ onStart }) {
           {/* 第三步：自定义名字和介绍 */}
           {step === 3 && (
             <div className="step-content">
-              <h2>为您的助手取个名字并添加个性化介绍</h2>
               <div className="intro-section">
                 <div className="selected-agent-preview">
                   <img src={require(`../../../assets/head/${agentAvatars.find(a => a.id === selectedAgent)?.file}`)} alt="选中的助手" />
