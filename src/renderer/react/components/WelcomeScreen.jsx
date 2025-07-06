@@ -7,6 +7,7 @@ function WelcomeScreen({ onStart }) {
   const [customName, setCustomName] = useState('');
   const [agentIntro, setAgentIntro] = useState('');
   const [step, setStep] = useState(1);
+  const [knowledgeFileName, setKnowledgeFileName] = useState('');
   // 记录上一次 agent 默认名
   const lastAgentDefaultName = useRef('');
 
@@ -72,6 +73,25 @@ function WelcomeScreen({ onStart }) {
         aiIntro: agentIntro.trim() || `你好！我是${finalName}，很高兴为您服务！✨`
       };
     onStart(config);
+  };
+
+  // 处理知识库文件上传
+  const handleKnowledgeFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setKnowledgeFileName(file.name);
+      // 读取文件内容并通过 Electron IPC 发送到主进程
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const content = evt.target.result;
+        if (window.electron && window.electron.ipcRenderer) {
+          window.electron.ipcRenderer.send('upload-knowledge-file', content);
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    } else {
+      setKnowledgeFileName('');
+    }
   };
 
   const getStepTitle = () => {
@@ -181,6 +201,18 @@ function WelcomeScreen({ onStart }) {
                     maxLength="1000"
                   />
                   <div className="char-count">{agentIntro.length}/1000</div>
+                </div>
+
+                {/* 文件上传入口 */}
+                <div className="file-upload-container">
+                  <label htmlFor="knowledge-upload">上传您的知识库（txt 文件，可选）</label>
+                  <input
+                    id="knowledge-upload"
+                    type="file"
+                    accept=".txt"
+                    onChange={handleKnowledgeFileUpload}
+                  />
+                  {knowledgeFileName && <div className="file-name">已选择：{knowledgeFileName}</div>}
                 </div>
               </div>
             </div>

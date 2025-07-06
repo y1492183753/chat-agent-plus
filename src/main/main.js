@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 require('dotenv').config();
+const fs = require('fs');
+const os = require('os');
 
 // 引入聊天服务和知识库服务
 const chatService = require('./chatService');
@@ -167,4 +169,21 @@ ipcMain.handle('add-knowledge-entry', async (event, entry) => {
 ipcMain.handle('clear-knowledge-base', async (event) => {
   knowledgeBase.clearKnowledgeBase();
   return { success: true };
+});
+
+// 监听知识库上传事件
+ipcMain.on('upload-knowledge-file', async (event, fileContent) => {
+  try {
+    // 写入临时文件
+    const tmpPath = path.join(os.tmpdir(), `user_knowledge_${Date.now()}.txt`);
+    fs.writeFileSync(tmpPath, fileContent, 'utf-8');
+    await knowledgeBase.loadTxtKnowledgeBase(tmpPath);
+    kbLoaded = true;
+    console.log('用户知识库已加载:', tmpPath);
+    // 通知渲染进程加载成功
+    event.sender.send('knowledge-upload-success');
+  } catch (e) {
+    console.error('知识库上传失败:', e);
+    event.sender.send('knowledge-upload-fail', e.message);
+  }
 });

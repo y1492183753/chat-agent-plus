@@ -26,7 +26,7 @@ function splitTextToChunks(text, chunkSize = 300) {
   return chunks;
 }
 
-// 加载txt文件并生成知识库
+// 加载txt文件并生成新的知识库（覆盖本地）
 async function loadTxtKnowledgeBase(txtFilePath) {
   const absPath = path.resolve(txtFilePath);
   const content = fs.readFileSync(absPath, 'utf-8');
