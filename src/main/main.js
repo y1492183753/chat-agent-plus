@@ -8,6 +8,9 @@ const knowledgeBase = require('./knowledgeBase');
 
 let mainWindow;
 
+// 全局知识库加载标志
+let kbLoaded = false;
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
@@ -42,10 +45,17 @@ function createWindow() {
   });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   createWindow();
   chatService.clearConversationHistory();
-  // Ollama 预热
+  // 加载本地知识库（请根据实际路径调整）
+  try {
+    await knowledgeBase.loadTxtKnowledgeBase(path.join(__dirname, '../assets/knowledge/my_knowledge.txt'));
+    kbLoaded = true;
+    console.log('本地知识库已加载');
+  } catch (e) {
+    console.warn('本地知识库加载失败:', e.message);
+  }
   chatService.callOllamaAPI('你好', [], () => {}, true).catch(() => {});
 });
 
@@ -79,6 +89,14 @@ ipcMain.handle('send-message', async (event, message) => {
     } catch (sendError) {
       console.warn('Failed to send stream start:', sendError.message);
     }
+    // 检索本地知识库
+    let kbContext = '';
+    if (kbLoaded) {
+      const kbResults = await knowledgeBase.searchKnowledgeBase(message, 3);
+      if (kbResults.length) {
+        kbContext = kbResults.join('\n');
+      }
+    }
     const fullResponse = await chatService.callOllamaAPI(
       message,
       chatService.getConversationHistory(),
@@ -91,7 +109,8 @@ ipcMain.handle('send-message', async (event, message) => {
           console.warn('Failed to send chunk:', sendError.message);
         }
       },
-      false
+      false,
+      kbContext // 新增：知识库上下文
     );
     chatService.pushAssistantMessage(fullResponse);
     try {

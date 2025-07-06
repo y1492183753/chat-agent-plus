@@ -5,8 +5,8 @@ const axios = require('axios');
 let conversationHistory = [];
 let userConfig = null;
 
-// 统一的 Ollama API 调用函数 - 支持流式输出
-async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmup = false) {
+// 新增：支持知识库上下文
+async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmup = false, kbContext = '') {
   const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/chat';
   const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
   try {
@@ -15,6 +15,10 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmu
       systemContent = `${userConfig.aiIntro}\n\n【核心约束规则】\n- 不要输出markdown格式文本`;
     } else if (userConfig && userConfig.aiName) {
       systemContent = `你是${userConfig.aiName}，一个友善、专业的AI助手。`;
+    }
+    // 拼接知识库上下文
+    if (kbContext && kbContext.trim()) {
+      systemContent = `【知识库参考】\n${kbContext}\n\n${systemContent}`;
     }
     const messages = [
       { role: 'system', content: systemContent },
