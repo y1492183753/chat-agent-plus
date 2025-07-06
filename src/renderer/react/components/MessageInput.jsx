@@ -67,7 +67,6 @@ function MessageInput({ onSendMessage, disabled }) {
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           placeholder={disabled ? "AI 正在思考中..." : "输入您的消息..."}
-          /* 不再禁用输入框 */
           rows="1"
         />
         <button type="submit" disabled={!message.trim() || disabled}>

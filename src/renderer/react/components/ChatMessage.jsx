@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import '../styles/components/ChatMessage.css';
+import TypingIndicator from './TypingIndicator';
 
 function ChatMessage({ message, isStreaming = false, userAvatar = 'boy.jpg', aiAvatar = 'ai-0.jpg' }) {
   // 使用 useMemo 缓存时间格式化结果
@@ -49,7 +50,10 @@ function ChatMessage({ message, isStreaming = false, userAvatar = 'boy.jpg', aiA
           />
         </div>
         <div className={`message-content ${isStreaming ? 'streaming' : ''}`}>
-          <div className="message-text">{message.content}</div>
+          <div className="message-text">
+            {message.content}
+            {isStreaming && <TypingIndicator />}
+          </div>
           <div className="message-time">{formattedTime}</div>
         </div>
       </div>
