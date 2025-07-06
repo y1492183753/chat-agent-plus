@@ -1,13 +1,12 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
-const axios = require('axios');
 require('dotenv').config();
 
+// 引入聊天服务和知识库服务
+const chatService = require('./chatService');
+const knowledgeBase = require('./knowledgeBase');
+
 let mainWindow;
-// 添加全局变量来存储对话历史
-let conversationHistory = [];
-// 添加用户配置全局变量
-let userConfig = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -18,20 +17,15 @@ function createWindow() {
       contextIsolation: true,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, ''), // 可选图标
-    // 在 macOS 上使用隐藏标题栏但保留交通灯按钮
+    icon: path.join(__dirname, ''),
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
-    // 设置最小窗口大小
     minWidth: 800,
     minHeight: 600,
     show: false,
-    // 在 macOS 上启用 vibrancy 效果
     vibrancy: process.platform === 'darwin' ? 'under-window' : undefined,
-    // 确保窗口居中
     center: true
   });
 
-  // 加载应用
   if (process.env.NODE_ENV === 'development') {
     mainWindow.loadFile(path.join(__dirname, '../../dist/renderer/index.html'));
     mainWindow.webContents.openDevTools();
@@ -50,9 +44,9 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  conversationHistory = [];
-  // Ollama 预热，提升首次响应速度，isWarmup=true
-  callOllamaAPI('你好', [], () => {}, true).catch(() => {});
+  chatService.clearConversationHistory();
+  // Ollama 预热
+  chatService.callOllamaAPI('你好', [], () => {}, true).catch(() => {});
 });
 
 app.on('window-all-closed', () => {
@@ -67,119 +61,17 @@ app.on('activate', () => {
   }
 });
 
-// 统一的 Ollama API 调用函数 - 支持流式输出
-// 新增 isWarmup 参数，预热时不写入历史
-async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmup = false) {
-  const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/chat';
-  const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
-  
-  try {
-    // 动态构建系统消息，使用用户配置的AI个性
-    let systemContent = '你是个和善、专业的AI助手。';
-    
-    if (userConfig && userConfig.aiIntro) {
-        // 增强提示词的约束力
-        systemContent = `${userConfig.aiIntro}
-
-【核心约束规则】
-- 不要输出markdown格式文本`;
-    } else if (userConfig && userConfig.aiName) {
-      systemContent = `你是${userConfig.aiName}，一个友善、专业的AI助手。`;
-    }
-
-    const messages = [
-      {
-        role: 'system',
-        content: systemContent
-      },
-      ...conversationHistory, // 保留完整对话历史
-      {
-        role: 'user',
-        content: message
-      }
-    ];
-
-    const response = await axios.post(apiUrl, {
-      model: model,
-      messages: messages,
-      stream: true, // 统一使用流式输出
-      options: {
-        temperature: 0.1,        // 提高角色一致性
-        top_p: 0.8,             // 增加词汇选择范围
-        repeat_penalty: 1.15,    // 稍微提高重复惩罚
-        num_predict: 800,        // 大幅增加最大生成长度
-        num_ctx: 8192,          // 显著增加上下文窗口
-        num_batch: 1024,        // 提高批处理大小
-        num_thread: 8           // 增加线程数（根据CPU核心数调整）
-      }
-    }, {
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 30000,
-      responseType: 'stream'
-    });
-
-    let fullContent = '';
-    
-    // 处理流式数据
-    return new Promise((resolve, reject) => {
-      response.data.on('data', (chunk) => {
-        const lines = chunk.toString().split('\n');
-        for (const line of lines) {
-          if (line.trim()) {
-            try {
-              const data = JSON.parse(line);
-              if (data.message && data.message.content) {
-                fullContent += data.message.content;
-                // 仅非预热时才回调
-                if (!isWarmup) {
-                  onChunk(data.message.content);
-                }
-              }
-              // 检查是否完成
-              if (data.done) {
-                resolve(fullContent);
-              }
-            } catch (e) {
-              // 忽略解析错误的行
-            }
-          }
-        }
-      });
-      response.data.on('end', () => {
-        resolve(fullContent);
-      });
-      response.data.on('error', (error) => {
-        reject(error);
-      });
-    });
-
-  } catch (error) {
-    console.error('Ollama API Error:', error);
-    throw error;
-  }
-}
-
-// 新增设置用户配置的 IPC 处理程序
+// 聊天相关 IPC 事件
 ipcMain.handle('set-user-config', async (event, config) => {
-  userConfig = config;
-  console.log('用户配置已设置:', userConfig);
+  chatService.setUserConfig(config);
+  console.log('用户配置已设置:', chatService.getUserConfig());
   return { success: true };
 });
 
-// 统一的 IPC 处理程序 - 支持流式输出，增加错误处理
 ipcMain.handle('send-message', async (event, message) => {
   try {
-    // 将用户消息添加到对话历史
-    conversationHistory.push({
-      role: 'user',
-      content: message
-    });
-    
+    chatService.pushUserMessage(message);
     const messageId = Date.now().toString();
-    
-    // 安全地发送开始信号
     try {
       if (event.sender && !event.sender.isDestroyed()) {
         event.sender.send('message-stream-start', messageId);
@@ -187,12 +79,10 @@ ipcMain.handle('send-message', async (event, message) => {
     } catch (sendError) {
       console.warn('Failed to send stream start:', sendError.message);
     }
-    
-    const fullResponse = await callOllamaAPI(
-      message, 
-      conversationHistory,
+    const fullResponse = await chatService.callOllamaAPI(
+      message,
+      chatService.getConversationHistory(),
       (chunk) => {
-        // 安全地发送增量内容
         try {
           if (event.sender && !event.sender.isDestroyed()) {
             event.sender.send('message-stream-chunk', messageId, chunk);
@@ -201,16 +91,9 @@ ipcMain.handle('send-message', async (event, message) => {
           console.warn('Failed to send chunk:', sendError.message);
         }
       },
-      false // 普通对话不是预热
+      false
     );
-    
-    // 将 AI 回复添加到对话历史
-    conversationHistory.push({
-      role: 'assistant',
-      content: fullResponse
-    });
-    
-    // 安全地发送结束信号
+    chatService.pushAssistantMessage(fullResponse);
     try {
       if (event.sender && !event.sender.isDestroyed()) {
         event.sender.send('message-stream-end', messageId);
@@ -218,7 +101,6 @@ ipcMain.handle('send-message', async (event, message) => {
     } catch (sendError) {
       console.warn('Failed to send stream end:', sendError.message);
     }
-    
     return {
       id: messageId,
       content: fullResponse,
@@ -227,10 +109,7 @@ ipcMain.handle('send-message', async (event, message) => {
     };
   } catch (error) {
     console.error('发送消息失败:', error);
-    
     const messageId = Date.now().toString();
-    
-    // 安全地发送错误信号
     try {
       if (event.sender && !event.sender.isDestroyed()) {
         event.sender.send('message-stream-error', messageId, error.message);
@@ -238,7 +117,6 @@ ipcMain.handle('send-message', async (event, message) => {
     } catch (sendError) {
       console.warn('Failed to send error:', sendError.message);
     }
-    
     return {
       id: messageId,
       content: `抱歉，我现在无法处理您的请求。错误信息: ${error.message}`,
@@ -248,13 +126,26 @@ ipcMain.handle('send-message', async (event, message) => {
   }
 });
 
-// 清除对话历史的 IPC 处理程序
 ipcMain.handle('clear-conversation', async (event) => {
-  conversationHistory = [];
+  chatService.clearConversationHistory();
   return { success: true };
 });
 
-// 获取对话历史的 IPC 处理程序
 ipcMain.handle('get-conversation-history', async (event) => {
-  return conversationHistory;
+  return chatService.getConversationHistory();
+});
+
+// 知识库相关 IPC 事件（接口预留，可扩展）
+ipcMain.handle('search-knowledge-base', async (event, query) => {
+  return knowledgeBase.searchKnowledgeBase(query);
+});
+
+ipcMain.handle('add-knowledge-entry', async (event, entry) => {
+  knowledgeBase.addKnowledgeEntry(entry);
+  return { success: true };
+});
+
+ipcMain.handle('clear-knowledge-base', async (event) => {
+  knowledgeBase.clearKnowledgeBase();
+  return { success: true };
 });
