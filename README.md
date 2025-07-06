@@ -175,13 +175,47 @@ chat-agent-plus/
 
 ## 使用说明
 
-1. 确保 Ollama 服务正在运行：`ollama serve`
-2. 启动聊天应用：`npm start`
-3. 在输入框中输入您的消息，按 Enter 发送（Shift+Enter 换行）
-4. 支持多行文本输入，输入框会自动调整高度
-5. AI 助手会通过本地 Ollama 模型实时回复您的消息
-6. 消息会显示发送时间
-7. 可在 .env 文件中切换模型（如 OLLAMA_MODEL=qwen2.5:7b）
+### 启动与体验
+
+1. 启动 Ollama 服务：
+   ```bash
+   ollama serve
+   ```
+2. 启动聊天应用：
+   ```bash
+   npm start
+   ```
+3. 在输入框中输入您的消息，按 Enter 发送（Shift+Enter 换行）。
+4. 支持多行文本输入，输入框会自动调整高度。
+5. AI 助手会通过本地 Ollama 模型实时回复您的消息。
+6. 消息会显示发送时间。
+7. 可在 `.env` 文件中切换模型（如 `OLLAMA_MODEL=qwen2.5:7b`）。
+
+#### 常用快捷键
+- Enter：发送消息
+- Shift+Enter：换行
+
+### .env 配置说明
+
+1. 复制示例文件并编辑：
+   ```bash
+   cp .env.example .env
+   # 用文本编辑器打开 .env 文件，配置如下：
+   ```
+2. 典型配置示例：
+   ```env
+   OLLAMA_API_URL=http://localhost:11434/api/chat
+   OLLAMA_MODEL=qwen2.5:7b
+   ```
+3. 切换模型时，只需修改 `OLLAMA_MODEL` 的值并重启应用。
+
+### 代码规范与 ESLint 使用
+
+- 自动修复代码风格问题：
+  ```bash
+  npx eslint src --fix
+  ```
+- 推荐在开发时保持代码风格一致，提交前执行一次自动修复。
 
 ## 开发脚本
 - `npm start` - 构建并启动应用
