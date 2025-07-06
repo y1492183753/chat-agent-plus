@@ -96,8 +96,17 @@ function WelcomeScreen({ onStart }) {
       window.electron.ipcRenderer.on('knowledge-upload-success', onSuccess);
       window.electron.ipcRenderer.on('knowledge-upload-fail', onFail);
       return () => {
-        window.electron.ipcRenderer.removeListener('knowledge-upload-success', onSuccess);
-        window.electron.ipcRenderer.removeListener('knowledge-upload-fail', onFail);
+        // 兼容不同 preload 封装，优先用 off，其次 removeAllListeners
+        if (window.electron.ipcRenderer.off) {
+          window.electron.ipcRenderer.off('knowledge-upload-success', onSuccess);
+          window.electron.ipcRenderer.off('knowledge-upload-fail', onFail);
+        } else if (window.electron.ipcRenderer.removeListener) {
+          window.electron.ipcRenderer.removeListener('knowledge-upload-success', onSuccess);
+          window.electron.ipcRenderer.removeListener('knowledge-upload-fail', onFail);
+        } else if (window.electron.ipcRenderer.removeAllListeners) {
+          window.electron.ipcRenderer.removeAllListeners('knowledge-upload-success');
+          window.electron.ipcRenderer.removeAllListeners('knowledge-upload-fail');
+        }
       };
     }
   }, []);
