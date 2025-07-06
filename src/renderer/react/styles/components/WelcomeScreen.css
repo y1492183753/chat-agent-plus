@@ -377,6 +377,25 @@
     transform: translateY(-2px);
   }
   
+  .btn-delete-knowledge {
+    background: linear-gradient(90deg, #ff5858 0%, #f09819 100%);
+    color: #fff;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.3rem 1.1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-left: 0.2rem;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+    box-shadow: 0 2px 8px rgba(255,88,88,0.08);
+  }
+  .btn-delete-knowledge:hover {
+    background: linear-gradient(90deg, #f09819 0%, #ff5858 100%);
+    transform: translateY(-2px) scale(1.04);
+    box-shadow: 0 4px 16px rgba(255,88,88,0.15);
+  }
+  
   /* 动画 */
   @keyframes fade-in {
     from {
@@ -413,3 +432,72 @@
       width: 100%;
     }
   }
+  
+  /* 知识库上传美化 */
+.file-upload-container {
+  width: 100%;
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-start;
+  background: linear-gradient(90deg, #f8f9fa 60%, #e0e7ff 100%);
+  border-radius: 1rem;
+  padding: 1.2rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  border: 1.5px solid #e0e7ff;
+  min-width: 0;
+}
+
+.file-upload-container label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #6c63ff;
+  margin-bottom: 0.3rem;
+}
+
+.file-upload-container input[type="file"] {
+  display: inline-block;
+  padding: 0.5rem 0;
+  font-size: 1rem;
+  color: #343a40;
+  background: none;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  margin-bottom: 0.2rem;
+}
+
+.file-upload-container .file-name {
+  font-size: 0.95rem;
+  color: #343a40;
+  background: #e0e7ff;
+  border-radius: 0.5rem;
+  padding: 0.2rem 0.7rem;
+  margin-top: 0.2rem;
+  margin-bottom: 0;
+}
+
+.upload-status {
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-top: 0.2rem;
+  padding: 0.2rem 0.7rem;
+  border-radius: 0.5rem;
+  display: inline-block;
+  animation: fade-in 0.4s;
+}
+.upload-status.uploading {
+  color: #007bff;
+  background: #e3f0ff;
+}
+.upload-status.success {
+  color: #22b573;
+  background: #e6fff3;
+  border: 1px solid #b2f2d7;
+}
+.upload-status.fail {
+  color: #ff3b30;
+  background: #fff0f0;
+  border: 1px solid #ffd6d6;
+}

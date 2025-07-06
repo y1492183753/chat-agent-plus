@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '../styles/components/WelcomeScreen.css';
 
 function WelcomeScreen({ onStart }) {
@@ -8,6 +8,9 @@ function WelcomeScreen({ onStart }) {
   const [agentIntro, setAgentIntro] = useState('');
   const [step, setStep] = useState(1);
   const [knowledgeFileName, setKnowledgeFileName] = useState('');
+  // 新增：上传状态和提示
+  const [knowledgeUploadStatus, setKnowledgeUploadStatus] = useState('idle'); // idle | uploading | success | fail
+  const [knowledgeUploadMsg, setKnowledgeUploadMsg] = useState('');
   // 记录上一次 agent 默认名
   const lastAgentDefaultName = useRef('');
 
@@ -28,7 +31,11 @@ function WelcomeScreen({ onStart }) {
   const canProceed = () => {
     if (step === 1) return userGender !== '';
     if (step === 2) return selectedAgent !== '';
-    if (step === 3) return customName.trim() !== ''; // 名字是必填的
+    if (step === 3) {
+      // 上传中禁止进入下一步
+      if (knowledgeUploadStatus === 'uploading') return false;
+      return customName.trim() !== '';
+    }
     return false;
   };
 
@@ -75,11 +82,33 @@ function WelcomeScreen({ onStart }) {
     onStart(config);
   };
 
+  // 监听主进程上传结果
+  useEffect(() => {
+    if (window.electron && window.electron.ipcRenderer) {
+      const onSuccess = () => {
+        setKnowledgeUploadStatus('success');
+        setKnowledgeUploadMsg('知识库上传成功！');
+      };
+      const onFail = (_event, msg) => {
+        setKnowledgeUploadStatus('fail');
+        setKnowledgeUploadMsg('知识库上传失败：' + (msg || '未知错误'));
+      };
+      window.electron.ipcRenderer.on('knowledge-upload-success', onSuccess);
+      window.electron.ipcRenderer.on('knowledge-upload-fail', onFail);
+      return () => {
+        window.electron.ipcRenderer.removeListener('knowledge-upload-success', onSuccess);
+        window.electron.ipcRenderer.removeListener('knowledge-upload-fail', onFail);
+      };
+    }
+  }, []);
+
   // 处理知识库文件上传
   const handleKnowledgeFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       setKnowledgeFileName(file.name);
+      setKnowledgeUploadStatus('uploading');
+      setKnowledgeUploadMsg('正在上传...');
       // 读取文件内容并通过 Electron IPC 发送到主进程
       const reader = new FileReader();
       reader.onload = function(evt) {
@@ -91,6 +120,8 @@ function WelcomeScreen({ onStart }) {
       reader.readAsText(file, 'utf-8');
     } else {
       setKnowledgeFileName('');
+      setKnowledgeUploadStatus('idle');
+      setKnowledgeUploadMsg('');
     }
   };
 
@@ -101,6 +132,17 @@ function WelcomeScreen({ onStart }) {
       case 3: return '✨ 个性化设置 - 为您的助手命名和介绍 ✨';
       default: return '';
     }
+  };
+
+  const handlePrev = () => {
+    if (step === 3) {
+      // 仅从第三步返回第二步时清空知识库和个性化介绍相关状态
+      setKnowledgeFileName('');
+      setKnowledgeUploadStatus('idle');
+      setKnowledgeUploadMsg('');
+      setAgentIntro('');
+    }
+    setStep(step - 1);
   };
 
   return (
@@ -206,13 +248,39 @@ function WelcomeScreen({ onStart }) {
                 {/* 文件上传入口 */}
                 <div className="file-upload-container">
                   <label htmlFor="knowledge-upload">上传您的知识库（txt 文件，可选）</label>
-                  <input
-                    id="knowledge-upload"
-                    type="file"
-                    accept=".txt"
-                    onChange={handleKnowledgeFileUpload}
-                  />
-                  {knowledgeFileName && <div className="file-name">已选择：{knowledgeFileName}</div>}
+                  {/* 只允许上传一份知识库，上传成功后隐藏上传入口，显示删除按钮和文件名 */}
+                  {knowledgeUploadStatus !== 'success' && (
+                    <input
+                      id="knowledge-upload"
+                      type="file"
+                      accept=".txt"
+                      onChange={handleKnowledgeFileUpload}
+                      disabled={knowledgeUploadStatus === 'uploading'}
+                    />
+                  )}
+                  {/* 文件名和删除按钮，仅在已选择或已上传时显示 */}
+                  {(knowledgeFileName && knowledgeUploadStatus !== 'idle') && (
+                    <div style={{display:'flex',alignItems:'center',gap:'0.5rem',marginTop:'0.2rem'}}>
+                      <div className="file-name">已选择：{knowledgeFileName}</div>
+                      {knowledgeUploadStatus === 'success' && (
+                        <button
+                          className="btn-delete-knowledge"
+                          type="button"
+                          onClick={() => {
+                            setKnowledgeFileName('');
+                            setKnowledgeUploadStatus('idle');
+                            setKnowledgeUploadMsg('');
+                          }}
+                        >
+                          删除知识库
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {/* 上传状态提示 */}
+                  {knowledgeUploadStatus === 'uploading' && <div className="upload-status uploading">{knowledgeUploadMsg}</div>}
+                  {knowledgeUploadStatus === 'success' && <div className="upload-status success">{knowledgeUploadMsg}</div>}
+                  {knowledgeUploadStatus === 'fail' && <div className="upload-status fail">{knowledgeUploadMsg}</div>}
                 </div>
               </div>
             </div>
@@ -223,7 +291,7 @@ function WelcomeScreen({ onStart }) {
           {step > 1 && (
             <button 
               className="btn-secondary" 
-              onClick={() => setStep(step - 1)}
+              onClick={handlePrev}
             >
               上一步
             </button>
