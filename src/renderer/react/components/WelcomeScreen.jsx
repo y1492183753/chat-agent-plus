@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import '../styles/components/WelcomeScreen.css';
 
 function WelcomeScreen({ onStart }) {
   const [userGender, setUserGender] = useState('');
   const [selectedAgent, setSelectedAgent] = useState('');
-  const [customName, setCustomName] = useState(''); // 新增：自定义名字
+  const [customName, setCustomName] = useState('');
   const [agentIntro, setAgentIntro] = useState('');
   const [step, setStep] = useState(1);
+  // 记录上一次 agent 默认名
+  const lastAgentDefaultName = useRef('');
 
   // 可用的头像选项
   const userAvatars = {
@@ -15,11 +17,11 @@ function WelcomeScreen({ onStart }) {
   };
 
   const agentAvatars = [
-    { id: 'ai-0', name: '优雅助手', file: 'ai-0.jpg' },
-    { id: 'ai-1', name: '活力助手', file: 'ai-1.jpg' },
-    { id: 'ai-2', name: '智慧助手', file: 'ai-2.jpg' },
-    { id: 'ai-3', name: '友善助手', file: 'ai-3.jpg' },
-    { id: 'ai-4', name: '创意助手', file: 'ai-4.jpg' }
+    { id: 'ai-0', name: '阔爱小胖纸', file: 'ai-0.jpg' },
+    { id: 'ai-1', name: '帅气男神', file: 'ai-1.jpg' },
+    { id: 'ai-2', name: '烂漫小女孩', file: 'ai-2.jpg' },
+    { id: 'ai-3', name: '优雅女士', file: 'ai-3.jpg' },
+    { id: 'ai-4', name: '温柔白大褂', file: 'ai-4.jpg' }
   ];
 
   const canProceed = () => {
@@ -31,18 +33,31 @@ function WelcomeScreen({ onStart }) {
 
   const handleNext = () => {
     if (step < 3) {
+      // 进入第三步时，若 customName 为空或等于上一次 agent 默认名，则自动同步为当前 agent 默认名
+      if (step === 2) {
+        const selectedAgentData = agentAvatars.find(agent => agent.id === selectedAgent);
+        if (selectedAgentData) {
+          if (!customName || customName === lastAgentDefaultName.current) {
+            setCustomName(selectedAgentData.name);
+          }
+          lastAgentDefaultName.current = selectedAgentData.name;
+        }
+      }
       setStep(step + 1);
     } else {
       handleStart();
     }
   };
 
-  // 当选择新的助手时，自动填充默认名字
+  // 当选择新的助手时，若 customName 为空或等于上一次 agent 默认名，则自动同步为新 agent 默认名
   const handleAgentSelect = (agentId) => {
     setSelectedAgent(agentId);
     const selectedAgentData = agentAvatars.find(agent => agent.id === agentId);
-    if (selectedAgentData && !customName) {
-      setCustomName(selectedAgentData.name);
+    if (selectedAgentData) {
+      if (!customName || customName === lastAgentDefaultName.current) {
+        setCustomName(selectedAgentData.name);
+      }
+      lastAgentDefaultName.current = selectedAgentData.name;
     }
   };
 
@@ -61,9 +76,9 @@ function WelcomeScreen({ onStart }) {
 
   const getStepTitle = () => {
     switch (step) {
-      case 1: return '👋 欢迎使用 AI 智能助手';
-      case 2: return '🤖 选择您的 AI 助手';
-      case 3: return '✨ 个性化设置';
+      case 1: return '👋 欢迎使用 定制 Agent ✨';
+      case 2: return '🤖 选择您的 Agent 形象 ✨';
+      case 3: return '✨ 个性化设置 - 为您的助手命名和介绍 ✨';
       default: return '';
     }
   };
@@ -111,7 +126,6 @@ function WelcomeScreen({ onStart }) {
           {/* 第二步：选择 Agent */}
           {step === 2 && (
             <div className="step-content">
-              <h2>选择您的 AI 助手头像</h2>
               <div className="agent-grid">
                 {agentAvatars.map(agent => (
                   <div 
@@ -122,6 +136,7 @@ function WelcomeScreen({ onStart }) {
                     <div className="agent-avatar">
                       <img src={require(`../../../assets/head/${agent.file}`)} alt={agent.name} />
                     </div>
+                    <div>{ agent.name }</div>
                   </div>
                 ))}
               </div>
@@ -159,13 +174,13 @@ function WelcomeScreen({ onStart }) {
                   <textarea
                     id="ai-intro"
                     className="intro-textarea"
-                    placeholder={`为${customName || '您的助手'}添加个性化介绍或提示词...`}
+                    placeholder={`为${customName || '您的助手'}添加个性化介绍或提示词...例如：我是一个八岁小女孩，平时喜欢卖萌，爱用表情包...等`}
                     value={agentIntro}
                     onChange={(e) => setAgentIntro(e.target.value)}
                     rows="4"
-                    maxLength="2000"
+                    maxLength="1000"
                   />
-                  <div className="char-count">{agentIntro.length}/2000</div>
+                  <div className="char-count">{agentIntro.length}/1000</div>
                 </div>
               </div>
             </div>

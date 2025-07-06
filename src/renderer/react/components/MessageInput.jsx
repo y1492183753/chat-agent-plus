@@ -22,7 +22,6 @@ function MessageInput({ onSendMessage, disabled }) {
 
   const handleInputChange = (e) => {
     setMessage(e.target.value);
-    // 延迟执行自动调整高度，确保 DOM 更新
     setTimeout(() => {
       autoResizeTextarea();
     }, 0);
@@ -31,13 +30,10 @@ function MessageInput({ onSendMessage, disabled }) {
   const autoResizeTextarea = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      // 重置高度以获取准确的 scrollHeight
       textarea.style.height = 'auto';
-      
       const scrollHeight = textarea.scrollHeight;
       const maxHeight = 120;
       const minHeight = 44;
-      
       if (scrollHeight > maxHeight) {
         textarea.style.height = maxHeight + 'px';
         textarea.style.overflowY = 'auto';
@@ -55,7 +51,6 @@ function MessageInput({ onSendMessage, disabled }) {
     autoResizeTextarea();
   }, [message]);
 
-  // 组件挂载时初始化
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = '44px';
@@ -72,7 +67,7 @@ function MessageInput({ onSendMessage, disabled }) {
           onChange={handleInputChange}
           onKeyPress={handleKeyPress}
           placeholder={disabled ? "AI 正在思考中..." : "输入您的消息..."}
-          disabled={disabled}
+          /* 不再禁用输入框 */
           rows="1"
         />
         <button type="submit" disabled={!message.trim() || disabled}>
