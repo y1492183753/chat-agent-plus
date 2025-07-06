@@ -2,7 +2,7 @@
 
 ## 项目简介
 
-**AI Agent Chat Plus** 是一个基于 Electron 和 React 构建的智能聊天应用。接入 Ollama 本地大模型，提供现代化的用户界面和流畅的聊天体验，支持与 AI 助手进行自然语言对话。
+**AI Agent Chat Plus** 是一个基于 Electron 和 React 构建的智能聊天应用。接入 Ollama 本地大模型，提供现代化的用户界面和流畅的聊天体验，支持定制提示词prompt / 本地知识库。
 
 ## 功能介绍
 - 与本地大模型（如 Llama3、Qwen、Phi3 等）进行自然语言对话
@@ -94,7 +94,7 @@ ollama pull phi3:3.8b
 
 1. 克隆本仓库：
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/y1492183753/chat-agent-plus.git
    cd chat-agent-plus
    ```
 
