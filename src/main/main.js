@@ -52,7 +52,9 @@ app.whenReady().then(async () => {
   chatService.clearConversationHistory();
   // 加载本地知识库（请根据实际路径调整）
   try {
-    await knowledgeBase.loadTxtKnowledgeBase(path.join(__dirname, '../assets/knowledge/my_knowledge.txt'));
+    await knowledgeBase.loadTxtKnowledgeBase(
+      path.join(__dirname, '../assets/knowledge/my_knowledge.txt')
+    );
     kbLoaded = true;
     console.log('本地知识库已加载');
   } catch (e) {

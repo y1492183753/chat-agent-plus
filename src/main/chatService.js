@@ -6,7 +6,13 @@ let conversationHistory = [];
 let userConfig = null;
 
 // 新增：支持知识库上下文
-async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmup = false, kbContext = '') {
+async function callOllamaAPI(
+  message,
+  conversationHistory = [],
+  onChunk,
+  isWarmup = false,
+  kbContext = ''
+) {
   const apiUrl = process.env.OLLAMA_API_URL || 'http://localhost:11434/api/chat';
   const model = process.env.OLLAMA_MODEL || 'qwen2.5:7b';
   try {
@@ -20,30 +26,34 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmu
     if (kbContext && kbContext.trim()) {
       systemContent = `【知识库参考】\n${kbContext}\n\n${systemContent}`;
     }
-    
+
     const messages = [
       { role: 'system', content: systemContent },
       ...conversationHistory,
       { role: 'user', content: message }
     ];
-    const response = await axios.post(apiUrl, {
-      model: model,
-      messages: messages,
-      stream: true,
-      options: {
-        temperature: 0.1,
-        top_p: 0.8,
-        repeat_penalty: 1.15,
-        num_predict: 800,
-        num_ctx: 8192,
-        num_batch: 1024,
-        num_thread: 8
+    const response = await axios.post(
+      apiUrl,
+      {
+        model: model,
+        messages: messages,
+        stream: true,
+        options: {
+          temperature: 0.1,
+          top_p: 0.8,
+          repeat_penalty: 1.15,
+          num_predict: 800,
+          num_ctx: 8192,
+          num_batch: 1024,
+          num_thread: 8
+        }
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 30000,
+        responseType: 'stream'
       }
-    }, {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 30000,
-      responseType: 'stream'
-    });
+    );
     let fullContent = '';
     return new Promise((resolve, reject) => {
       response.data.on('data', (chunk) => {
@@ -61,12 +71,18 @@ async function callOllamaAPI(message, conversationHistory = [], onChunk, isWarmu
               if (data.done) {
                 resolve(fullContent);
               }
-            } catch (e) {}
+            } catch (e) {
+              // 忽略解析错误，通常为非JSON行
+            }
           }
         }
       });
-      response.data.on('end', () => { resolve(fullContent); });
-      response.data.on('error', (error) => { reject(error); });
+      response.data.on('end', () => {
+        resolve(fullContent);
+      });
+      response.data.on('error', (error) => {
+        reject(error);
+      });
     });
   } catch (error) {
     console.error('Ollama API Error:', error);

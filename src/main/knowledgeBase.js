@@ -43,7 +43,9 @@ async function loadTxtKnowledgeBase(txtFilePath) {
 
 // 余弦相似度
 function cosineSimilarity(vecA, vecB) {
-  let dot = 0, normA = 0, normB = 0;
+  let dot = 0,
+    normA = 0,
+    normB = 0;
   for (let i = 0; i < vecA.length; i++) {
     dot += vecA[i] * vecB[i];
     normA += vecA[i] * vecA[i];
@@ -58,12 +60,12 @@ async function searchKnowledgeBase(query, topN = 3) {
   const m = await getModel();
   const queryEmb = await m.embed([query]);
   const queryVec = (await queryEmb.array())[0];
-  const scored = knowledgeBase.map(item => ({
+  const scored = knowledgeBase.map((item) => ({
     ...item,
     score: cosineSimilarity(queryVec, item.embedding)
   }));
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, topN).map(item => item.text);
+  return scored.slice(0, topN).map((item) => item.text);
 }
 
 // 添加知识条目（自动生成embedding）
