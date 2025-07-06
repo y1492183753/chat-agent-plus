@@ -2,7 +2,58 @@
 
 ## 项目简介
 
-**AI Agent Chat Plus** 是一个基于 Electron 和 React 构建的智能聊天应用。接入 Ollama 本地大模型，提供现代化的用户界面和流畅的聊天体验，支持与AI助手进行自然语言对话。
+**AI Agent Chat Plus** 是一个基于 Electron 和 React 构建的智能聊天应用。接入 Ollama 本地大模型，提供现代化的用户界面和流畅的聊天体验，支持与 AI 助手进行自然语言对话。
+
+## 功能介绍
+- 与本地大模型（如 Llama3、Qwen、Phi3 等）进行自然语言对话
+- 支持多轮对话和上下文记忆
+- 聊天消息实时显示，支持多行输入与自动换行
+- 消息时间戳显示，便于追溯历史
+- 支持模型切换与自定义（通过 .env 配置）
+- 聊天窗口支持毛玻璃和多种主题切换
+- 打字指示器与优雅的加载动画
+- 完全本地化运行，保护用户隐私
+- 支持消息输入快捷键（Enter 发送，Shift+Enter 换行）
+- 支持开发者模式与热重载，便于二次开发
+
+## 项目架构
+本项目采用 Electron + React 架构，结合 Ollama 本地大模型，整体结构如下：
+
+```
+┌─────────────────────────────┐
+│         Electron 主进程      │
+│  (src/main/main.js)         │
+│  - 应用窗口管理              │
+│  - 与渲染进程通信            │
+└─────────────┬───────────────┘
+              │ preload.js
+┌─────────────▼───────────────┐
+│      React 渲染进程          │
+│  (src/renderer/react/)      │
+│  - 聊天 UI 展示              │
+│  - 用户输入与消息流          │
+│  - 主题切换、动画等          │
+└─────────────┬───────────────┘
+              │ IPC 通信
+┌─────────────▼───────────────┐
+│   Node 服务/中间层           │
+│  (chatService.js,           │
+│   knowledgeBase.js)         │
+│  - 处理与 Ollama API 的交互   │
+│  - 管理上下文与知识库         │
+└─────────────┬───────────────┘
+              │ HTTP API
+┌─────────────▼───────────────┐
+│        Ollama 本地模型        │
+│  (如 llama3.1:8b 等)         │
+└─────────────────────────────┘
+```
+
+- Electron 主进程负责窗口生命周期、系统集成等。
+- preload.js 作为桥梁，安全地暴露部分 Node 能力给前端。
+- React 渲染进程负责所有 UI 交互和用户体验。
+- chatService.js/knowledgeBase.js 负责与 Ollama API 通信、上下文管理、知识库扩展。
+- Ollama 本地模型负责 AI 推理。
 
 ## 主要特性
 - 现代化的聊天界面设计
@@ -34,9 +85,9 @@ brew install ollama
 ollama serve
 
 # 在另一个终端窗口中下载模型
+ollama pull qwen2.5:7b （ 推荐：人物对话情景 ）
 ollama pull llama3.1:8b
-# 或者其他模型
-ollama pull qwen2.5:7b
+ollama pull phi3:3.8b
 ```
 
 ### 3. 安装项目
@@ -78,70 +129,59 @@ OLLAMA_API_URL=http://localhost:11434/api/chat
 OLLAMA_MODEL=llama3.1:8b
 ```
 
-### 支持的模型
-
-你可以根据自己的硬件配置选择合适的模型：
-
-- **8GB RAM**: `llama3.1:8b`, `qwen2.5:7b`, `phi3:3.8b`
-- **16GB RAM**: `llama3.1:13b`, `qwen2.5:14b`, `codellama:13b`
-- **32GB+ RAM**: `llama3.1:70b`, `qwen2.5:72b`
-
-下载模型命令：
-```bash
-ollama pull llama3.1:8b
-ollama pull qwen2.5:7b
-ollama pull phi3:3.8b
-```
-
 ## 目录结构
 ```
 chat-agent-plus/
 ├── src/
-│   ├── main/
-│   │   ├── main.js          # Electron 主进程
-│   │   └── preload.js       # 预加载脚本
+│   ├── main/                      # Electron 主进程相关
+│   │   ├── main.js                # Electron 主进程入口
+│   │   ├── preload.js             # 预加载脚本
+│   │   ├── chatService.js         # 聊天服务与 Ollama 通信
+│   │   ├── knowledgeBase.js       # 知识库扩展
+│   ├── assets/                    # 静态资源（图片、icon等）
+│   │   ├── head/                  # 头像图片
+│   │   ├── icons/                 # 图标
+│   │   └── knowledge/             # 预置知识库
 │   └── renderer/
-│       └── react/           # React 渲染进程
-│           ├── components/
-│           │   ├── ChatMessage.jsx    # 聊天消息组件
-│           │   └── MessageInput.jsx   # 消息输入组件
-│           ├── styles/
-│           │   ├── index.css          # 基础样式
-│           │   └── App.css            # 应用样式
-│           ├── App.jsx                # 主应用组件
-│           ├── index.js               # React 入口
-│           └── index.html             # HTML 模板
-├── dist/                    # Webpack 构建输出
-├── webpack.config.js        # Webpack 配置
-├── .env.example            # 环境变量示例
-└── package.json            # 项目依赖和脚本
+│       └── react/                 # React 渲染进程
+│           ├── App.jsx            # 主应用组件
+│           ├── index.js           # React 入口
+│           ├── index.html         # HTML 模板
+│           ├── components/        # 组件
+│           │   ├── ChatMessage.jsx
+│           │   ├── MessageInput.jsx
+│           │   ├── ThemeSwitcher.jsx
+│           │   ├── TypingIndicator.jsx
+│           │   └── WelcomeScreen.jsx
+│           ├── contexts/          # React 上下文
+│           ├── styles/            # 样式
+│           │   ├── App.css
+│           │   ├── index.css
+│           │   └── components/
+│           │       ├── ChatMessage.css
+│           │       ├── Header.css
+│           │       ├── MessageInput.css
+│           │       ├── TypingIndicator.css
+│           │       └── WelcomeScreen.css
+│           │   └── themes/
+│           │       └── rainbow-bubble.css
+│           └── utils/             # 工具函数
+├── dist/                          # Webpack 构建输出
+├── webpack.config.js              # Webpack 配置
+├── .env.example                   # 环境变量示例
+├── package.json                   # 项目依赖和脚本
+└── README.md                      # 项目说明文档
 ```
 
 ## 使用说明
 
-### 启动应用
 1. 确保 Ollama 服务正在运行：`ollama serve`
 2. 启动聊天应用：`npm start`
-3. 在输入框中输入您的消息
-4. 按 Enter 发送消息（Shift+Enter 换行）
-5. 支持多行文本输入，输入框会自动调整高度
-6. AI 助手会通过本地 Ollama 模型实时回复您的消息
-7. 消息会显示发送时间
-
-### 切换模型
-在 `.env` 文件中修改 `OLLAMA_MODEL` 变量：
-```env
-OLLAMA_MODEL=qwen2.5:7b  # 切换到 Qwen 模型
-```
-
-### 删除不需要的模型（释放空间）
-ollama rm qwen2.5:7b
-
-### 查看模型信息
-ollama show qwen2.5:7b
-
-### 直接在终端与模型对话（测试用）
-ollama run qwen2.5:7b
+3. 在输入框中输入您的消息，按 Enter 发送（Shift+Enter 换行）
+4. 支持多行文本输入，输入框会自动调整高度
+5. AI 助手会通过本地 Ollama 模型实时回复您的消息
+6. 消息会显示发送时间
+7. 可在 .env 文件中切换模型（如 OLLAMA_MODEL=qwen2.5:7b）
 
 ## 开发脚本
 - `npm start` - 构建并启动应用
@@ -150,6 +190,7 @@ ollama run qwen2.5:7b
 - `npm run build:react:dev` - 开发模式构建
 - `npm run build:react:watch` - 监听模式构建
 - `npm run build` - 构建完整应用
+- `npm run lint:fix` - 自动修复代码风格
 
 ## 技术栈
 - **前端框架**: React 18
@@ -161,22 +202,19 @@ ollama run qwen2.5:7b
 - **工具库**: UUID, dotenv
 
 ## 优势
-
-### 相比在线 API 的优势
 - **完全免费**: 无需支付 API 调用费用
 - **数据隐私**: 所有对话数据完全本地化
 - **离线使用**: 不依赖网络连接
 - **自定义模型**: 可以选择最适合的开源模型
 - **无限制**: 没有调用次数和频率限制
 
-### 系统要求
+## 系统要求
 - **最低配置**: 8GB RAM (推荐 16GB+)
 - **存储空间**: 至少 10GB 可用空间
 - **操作系统**: macOS, Windows, Linux
 
 ## 故障排除
 
-### 常见问题
 1. **连接失败**: 确保 Ollama 服务正在运行 (`ollama serve`)
 2. **模型未找到**: 检查模型是否已下载 (`ollama list`)
 3. **响应缓慢**: 首次使用时模型需要加载，后续会更快
