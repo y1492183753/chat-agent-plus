@@ -209,13 +209,7 @@ chat-agent-plus/
    ```
 3. 切换模型时，只需修改 `OLLAMA_MODEL` 的值并重启应用。
 
-### 代码规范与 ESLint 使用
 
-- 自动修复代码风格问题：
-  ```bash
-  npx eslint src --fix
-  ```
-- 推荐在开发时保持代码风格一致，提交前执行一次自动修复。
 
 ## 开发脚本
 - `npm start` - 构建并启动应用
